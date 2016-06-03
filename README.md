@@ -1,8 +1,8 @@
 Atlas plugin for Grafana 2.6
 ===============
-[Atlas plugin for Grafana](https://github.com/Netflix/atlas) is backend for managing dimensional time series data.
+[Atlas by Netflix](https://github.com/Netflix/atlas) is backend for managing dimensional time series data.
 
-![Atlas_grafana_dashboard_example](https://cloud.githubusercontent.com/assets/13449387/15770985/2fa6d046-2970-11e6-9c2f-e43937698b63.png)
+![Atlas plugin for Grafana](https://cloud.githubusercontent.com/assets/13449387/15770985/2fa6d046-2970-11e6-9c2f-e43937698b63.png)
 
 Plugin presents 2 ways of input an Atlas query: simple query builder UI and raw query input. You can switch input mode by `Switch raw Atlas query input` option in query row menu dropdown.
 
