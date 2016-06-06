@@ -1,15 +1,37 @@
 {
+  "id": "atlas-datasource",
   "name": "Atlas",
   "type": "atlas",
   "pluginType": "datasource",
-  "serviceName": "AtlasDatasource",
+
   "atlasFormat": "std.json",
 
+  "metrics": true,
+  "serviceName": "AtlasDatasource",
   "module": "app/plugins/datasource/atlas/datasource",
-
   "partials": {
     "config": "app/plugins/datasource/atlas/partials/config.html"
   },
 
-  "metrics": true
+  "info": {
+    "description": "Grafana plugin for Netflix Atlas backend",
+    "author": {
+      "url": "https://github.com/upwork"
+    },
+    "links": [
+      {"name": "Github", "url": "https://github.com/upwork"}
+    ],
+    "screenshots": [
+      {"name": "Atlas Plugin", "path": "https://cloud.githubusercontent.com/assets/13449387/15770985/2fa6d046-2970-11e6-9c2f-e43937698b63.png"}
+    ],
+    "keywords": ["atlas", "datasource"],
+    "version": "1.0.1",
+    "updated": "2016-06-06"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "2.6.0",
+    "plugins": [ ]
+  }
+
 }
