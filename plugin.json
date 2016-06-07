@@ -25,7 +25,7 @@
       {"name": "Atlas Plugin", "path": "https://cloud.githubusercontent.com/assets/13449387/15770985/2fa6d046-2970-11e6-9c2f-e43937698b63.png"}
     ],
     "keywords": ["atlas", "datasource"],
-    "version": "1.0.2",
+    "version": "1.0.0",
     "updated": "2016-06-07"
   },
 
