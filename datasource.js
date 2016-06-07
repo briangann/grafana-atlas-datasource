@@ -24,7 +24,6 @@ define(["angular",
 
       AtlasDatasource.prototype.query = function (options) {
         var queries = [];
-        var ignoredMetricsToHide = {};
         options.targets.forEach(function (target) {
           if (target.hide || !(target.rawQuery || target.metric)) {
             return;
@@ -85,10 +84,6 @@ define(["angular",
               queryParts.push(':legend');
             }
 
-            if (target.aggregatedOnly) {
-              ignoredMetricsToHide[target.metric] = true;
-            }
-
             queries.push(queryParts.join(','));
           }
         });
@@ -122,7 +117,7 @@ define(["angular",
             var error = new Error("No data");
             deferred.reject(error);
           }
-          deferred.resolve(convertToTimeseries(response.data, options.hiddenSeries, ignoredMetricsToHide));
+          deferred.resolve(convertToTimeseries(response.data));
         }, function (response) {
           console.error('Unable to load data. Response: %o', response.data ? response.data.message : response);
           var error = new Error("Unable to load data");
@@ -131,18 +126,12 @@ define(["angular",
         return deferred.promise;
       };
 
-      function convertToTimeseries(result, hiddenSeries, ignoredMetricsToHide) {
+      function convertToTimeseries(result) {
         var timeseriesData = _.map(result.legend, function (legend, index) {
           var series = {target: legend, datapoints: []};
           if (legend.indexOf('NO DATA') > 0 || legend.indexOf('NO_DATA') > 0) {
             series.allIsNull = true;
             return series;
-          }
-
-          var metric = result.metrics[index];
-          if (hiddenSeries && !ignoredMetricsToHide[metric.name] && metric['deployment.aws.local-ipv4']
-            && legend.indexOf(metric['deployment.aws.local-ipv4']) > 0) {
-            hiddenSeries[legend] = true;
           }
 
           var values = _.pluck(result.values, index);
