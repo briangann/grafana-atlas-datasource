@@ -23,7 +23,7 @@ A ``docker-compose.yml`` file is provided to easily stand up a Grafana 4.x serve
 * Copy/clone this repos into /var/lib/grafana/plugins
 * Restarting ``grafana-server`` is required to pick up the plugin.
 
-Once the plugin is "feature complete" a PR will be made to add this plugin to the official datasource plugins on [Grafana.net](http://grafana.net)
+This plugin is "feature complete", so it will be added to the official datasource plugins on [Grafana.net](http://grafana.net) soon.
 
 ### Important
 You need to run Atlas 1.5.0+ for this to function properly as ``std.json`` output is mandatory.
