@@ -33,7 +33,7 @@ var AtlasDatasourceQueryCtrl = exports.AtlasDatasourceQueryCtrl = function (_Que
     function AtlasDatasourceQueryCtrl($scope, $injector, templateSrv, uiSegmentSrv) {
         _classCallCheck(this, AtlasDatasourceQueryCtrl);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(AtlasDatasourceQueryCtrl).call(this, $scope, $injector));
+        var _this = _possibleConstructorReturn(this, (AtlasDatasourceQueryCtrl.__proto__ || Object.getPrototypeOf(AtlasDatasourceQueryCtrl)).call(this, $scope, $injector));
 
         _this.scope = $scope;
         _this.uiSegmentSrv = uiSegmentSrv;
@@ -50,7 +50,7 @@ var AtlasDatasourceQueryCtrl = exports.AtlasDatasourceQueryCtrl = function (_Que
     _createClass(AtlasDatasourceQueryCtrl, [{
         key: "getOptions",
         value: function getOptions() {
-            return this.datasource.metricFindQuery(this.target).then(this.uiSegmentSrv.transformToSegments(true));
+            return this.datasource.metricFind(this.target).then(this.uiSegmentSrv.transformToSegments(true));
             // Options have to be transformed by uiSegmentSrv to be usable by metric-segment-model directive
         }
     }, {

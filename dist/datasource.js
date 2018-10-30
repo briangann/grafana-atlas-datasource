@@ -59,7 +59,18 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
 
                 _createClass(AtlasDatasource, [{
                     key: "metricFindQuery",
-                    value: function metricFindQuery(options) {
+                    value: function metricFindQuery(query) {
+                        return this.backendSrv.datasourceRequest({
+                            url: this.url + '/api/v1/tags/' + (query ? this.templateSrv.replaceWithText(query) : 'name'),
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(this.mapToTextValue);
+                    }
+                }, {
+                    key: "metricFind",
+                    value: function metricFind(options) {
                         return this.backendSrv.datasourceRequest({
                             url: this.url + '/api/v1/tags/name',
                             data: options,
@@ -72,10 +83,10 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
                 }, {
                     key: "mapToTextValue",
                     value: function mapToTextValue(result) {
-                        return _.map(result.data, function (d, i) {
+                        return _.map(result.data, function (d) {
                             return {
                                 text: d,
-                                value: i
+                                value: d
                             };
                         });
                     }
@@ -108,6 +119,7 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
                     value: function query(options) {
                         var queries = [];
                         var _this = this;
+                        var _scopeTags = _this.templateSrv.variables;
                         options.targets.forEach(function (target) {
                             if (target.hide || !(target.rawQuery || target.target)) {
                                 return;
@@ -117,7 +129,7 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
                                     return;
                                 }
                                 var rawQueryParts = [];
-                                rawQueryParts.push(target.rawQuery);
+                                rawQueryParts.push(_this.templateSrv.replace(target.rawQuery, options.scopedVars));
                                 if (target.alias) {
                                     var legend = target.alias;
                                     rawQueryParts.push(legend);
@@ -135,6 +147,17 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
                                 }
                                 var queryParts = [];
                                 queryParts.push("name," + target.target + ",:eq");
+                                /* Commented out as we don't use this and this often causes "No data"
+                                if (_scopeTags) {
+                                    for (var i = 0; i < _scopeTags.length; i++) {
+                                        if (_scopeTags[i].current.text != 'All') {
+                                            queryParts.push(_scopeTags[i].name + "," + _scopeTags[i].current.text + ",:eq,:and");
+                                        }
+                                    }
+                                }
+                                */
+                                var hasPushAggregation = false;
+                                var hasPushMath = false;
                                 if (target.tags) {
                                     var logicals = [];
                                     for (var i = 0, len = target.tags.length; i < len; i++) {
@@ -142,39 +165,49 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
                                         var valueReplaced = _this.templateSrv.replace(aTag.value);
                                         // the replaced value for templates will be a comma separated list
                                         if (valueReplaced.includes(',')) {
-                                            len = valueReplaced.length;
+                                            // len = valueReplaced.length;
                                             valueReplaced = valueReplaced.replace('{', '');
                                             valueReplaced = valueReplaced.replace('}', '');
                                             var multipleValues = valueReplaced.split(',');
-                                            for (var mvIndex = 0, mvLen = multipleValues.length; mvIndex < mvLen; mvIndex++) {
-                                                // queryParts.push(aTag.name);
-                                                if ("xxxin" === aTag.matcher) {
-                                                    //if (target.aggregation) {
-                                                    //    queryParts.push(":" + target.aggregation);
-                                                    //}
-                                                    queryParts.push(aTag.name);
-                                                    queryParts.push("(");
-                                                    queryParts.push(multipleValues[mvIndex]);
-                                                    queryParts.push(")");
-                                                    queryParts.push(":in");
-                                                } else {
-                                                    queryParts.push(aTag.name);
-                                                    queryParts.push(multipleValues[mvIndex]);
-                                                    queryParts.push(":" + aTag.matcher);
-                                                }
+                                            if ("in" === aTag.matcher) {
+                                                //if (target.aggregation) {
+                                                //    queryParts.push(":" + target.aggregation);
+                                                //}
+                                                queryParts.push(aTag.name);
+                                                queryParts.push("(");
+                                                queryParts.push(valueReplaced);
+                                                queryParts.push(")");
+                                                queryParts.push(":in");
                                                 if ("not" === aTag.notCondition) {
                                                     queryParts.push(":not");
                                                 }
                                                 logicals.push(":" + aTag.logical);
+                                            } else {
+                                                for (var mvIndex = 0, mvLen = multipleValues.length; mvIndex < mvLen; mvIndex++) {
+                                                    // queryParts.push(aTag.name);
+
+                                                    queryParts.push(aTag.name);
+                                                    queryParts.push(multipleValues[mvIndex]);
+                                                    queryParts.push(":" + aTag.matcher);
+                                                    if ("not" === aTag.notCondition) {
+                                                        queryParts.push(":not");
+                                                    }
+                                                    logicals.push(":" + aTag.logical);
+                                                }
                                             }
                                         } else {
                                             // queryParts.push(aTag.name);
                                             if ("in" === aTag.matcher) {
                                                 // no logicals associated with this matcher
 
+                                                if (target.math) {
+                                                    hasPushMath = true;
+                                                    queryParts.push(":" + target.math);
+                                                }
                                                 // legend must come before this matcher
                                                 // aggregation must come before this matcher, so the name must be pushed after
                                                 if (target.aggregation) {
+                                                    hasPushAggregation = true;
                                                     queryParts.push(":" + target.aggregation);
                                                 }
                                                 queryParts.push(aTag.name);
@@ -193,15 +226,18 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
                                             if ("in" === aTag.matcher) {
                                                 // logicals go before "in"
                                             } else {
-                                                    logicals.push(":" + aTag.logical);
-                                                }
+                                                logicals.push(":" + aTag.logical);
+                                            }
                                         }
                                     }
                                     queryParts = queryParts.concat(logicals.reverse());
                                 }
-                                //if (target.aggregation) {
-                                //    queryParts.push(":" + target.aggregation);
-                                //}
+                                if (target.aggregation && !hasPushAggregation) {
+                                    queryParts.push(":" + target.aggregation);
+                                }
+                                if (target.math && !hasPushMath) {
+                                    queryParts.push(":" + target.math);
+                                }
                                 if (target.groupBys && target.groupBys.length > 0) {
                                     queryParts.push("(");
                                     target.groupBys.forEach(function (groupBy) {
@@ -229,12 +265,14 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
                         // Atlas can take multiple concatenated stack queries
                         var fullQuery = queries.join(',');
 
+                        /*
                         var interval = options.interval;
                         if (kbn.interval_to_ms(interval) < this.minimumInterval) {
                             // console.log("Detected interval smaller than allowed: " + interval);
                             interval = kbn.secondsToHms(this.minimumInterval / 1000);
                             // console.log("New Interval: " + interval);
                         }
+                        */
 
                         /*
                                 var params = {
@@ -248,7 +286,7 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
 
                         var params = {
                             q: fullQuery,
-                            step: interval,
+                            // step: interval,
                             s: options.range.from.valueOf(),
                             e: options.range.to.valueOf(),
                             format: this.atlasFormat
@@ -301,14 +339,14 @@ System.register(["angular", "lodash", "app/core/utils/datemath", "app/core/utils
                                 return series;
                             }
 
-                            var values = _.pluck(result.values, index);
+                            var values = _.map(result.values, index);
 
                             var notAllZero = false;
                             var notAllNull = false;
                             for (var i = 0; i < values.length; i++) {
                                 var value = values[i];
                                 var timestamp = result.start + i * result.step;
-                                series.datapoints.push([value, timestamp]);
+                                series.datapoints.push([value === "NaN" ? null : value, timestamp]);
                                 notAllZero = notAllZero || value !== 0;
                                 notAllNull = notAllNull || value !== "NaN" && value !== undefined;
                             }
